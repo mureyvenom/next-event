@@ -1,0 +1,9 @@
+.summary {
+  @apply w-full h-[30vh];
+  background-image: linear-gradient(to bottom left, #008b79, #1180a1);
+}
+
+.summary h1 {
+  @apply m-0 pt-12 text-[2rem] text-center text-white md:text-[5rem];
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+}

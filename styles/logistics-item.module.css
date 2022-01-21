@@ -1,0 +1,15 @@
+.item {
+  @apply flex text-2xl items-center flex-col text-center text-[#aefff8] md:items-start md:text-left;
+}
+
+.item span {
+  @apply block;
+}
+
+.icon {
+  @apply mr-4 text-[#18e0d0];
+}
+
+.icon svg {
+  @apply w-8 h-8;
+}

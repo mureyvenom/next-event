@@ -1,29 +1,88 @@
 import type { NextPage } from "next";
+import Head from "next/head";
 import { useRouter } from "next/router";
-import { Fragment } from "react";
-import { getFilteredEvents } from "../../data/dummy-data";
+import { Fragment, useEffect, useState } from "react";
 import Button from "../../src/components/Button";
 import ErrorAlert from "../../src/components/ErrorAlert";
 import EventList from "../../src/components/EventList";
 import ResultsTitle from "../../src/components/ResultsTitle";
+import { EventItemType } from "../../src/types";
+// import useSWR from "swr";
 
 const FilteredEvents: NextPage = () => {
   const router = useRouter();
+  const [loadedEvents, setLoadedEvents] = useState<EventItemType[]>([]);
+  const [error, setError] = useState("");
 
   const { slug } = router.query;
+  // const { data, error } = useSWR(
+  //   "https://next-js-events-5ba3a-default-rtdb.firebaseio.com/events.json"
+  // );
+
+  useEffect(() => {
+    const fetchData = () => {
+      fetch(
+        "https://next-js-events-5ba3a-default-rtdb.firebaseio.com/events.json"
+      )
+        .then((resp) => resp.json())
+        .then((data) => {
+          const events = [];
+
+          for (const key in data) {
+            events.push({
+              id: key,
+              ...data[key],
+            });
+          }
+
+          setLoadedEvents(events);
+        })
+        .catch((err) => {
+          setError(err);
+        });
+    };
+
+    fetchData();
+    // if (data) {
+    //   console.log("changes");
+    //   const events = [];
+
+    //   for (const key in data) {
+    //     events.push({
+    //       id: key,
+    //       ...data[key],
+    //     });
+    //   }
+
+    //   setLoadedEvents(events);
+    // }
+  }, []);
 
   if (!slug) {
-    return <p className="text-center">Loading...</p>;
+    return <p>No Parameters</p>;
   }
 
   const filteredYear = Number(slug[0]);
   const filteredMonth = Number(slug[1]);
 
+  const filteredEvents = loadedEvents.filter((event) => {
+    const eventDate = new Date(event.date);
+    return (
+      eventDate.getFullYear() === filteredYear &&
+      eventDate.getMonth() === filteredMonth - 1
+    );
+  });
+
+  if (!loadedEvents.length && !error) {
+    return <p className="text-center">Loading...</p>;
+  }
+
   if (
     isNaN(filteredMonth) ||
     isNaN(filteredYear) ||
     filteredMonth > 12 ||
-    filteredMonth < 1
+    filteredMonth < 1 ||
+    error
   ) {
     return (
       <Fragment>
@@ -36,11 +95,6 @@ const FilteredEvents: NextPage = () => {
       </Fragment>
     );
   }
-
-  const filteredEvents = getFilteredEvents({
-    year: filteredYear,
-    month: filteredMonth,
-  });
 
   if (!filteredEvents || filteredEvents.length < 1) {
     return (
@@ -55,11 +109,18 @@ const FilteredEvents: NextPage = () => {
     );
   }
 
-  const date = new Date(filteredYear, filteredMonth);
+  const updatedDate = new Date(filteredYear, filteredMonth - 1);
 
   return (
     <Fragment>
-      <ResultsTitle date={date} />
+      <Head>
+        <title>Events | Filtered Events</title>
+        <meta
+          name="description"
+          content={`All events for ${filteredMonth} ${filteredYear}`}
+        />
+      </Head>
+      <ResultsTitle date={updatedDate} />
       <EventList items={filteredEvents} />
     </Fragment>
   );
